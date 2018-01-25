@@ -27,7 +27,7 @@ def make_fake_api_client():
     This returns most of the default cases correctly, but most arguments that
     change behaviour will not work.
     """
-    api_client = docker.APIClient()
+    api_client = docker.APIClient(base_url='https://unittest:8080')
     mock_client = CopyReturnMagicMock(**{
         'build.return_value': fake_api.FAKE_IMAGE_ID,
         'commit.return_value': fake_api.post_fake_commit()[1],
@@ -56,6 +56,6 @@ def make_fake_client():
     """
     Returns a Client with a fake APIClient.
     """
-    client = docker.DockerClient()
+    client = docker.DockerClient(base_url='https://unittest:8080')
     client.api = make_fake_api_client()
     return client

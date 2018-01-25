@@ -18,39 +18,45 @@ except ImportError:
 TEST_CERT_DIR = os.path.join(os.path.dirname(__file__), 'testdata/certs')
 
 
+def docker_from_env(*args, **kwargs):
+    return docker.from_env(
+        *args, environment={'DOCKER_HOST': 'https://unittest:8080'}, **kwargs
+    )
+
+
 class ClientTest(unittest.TestCase):
 
     @mock.patch('docker.api.APIClient.events')
     def test_events(self, mock_func):
         since = datetime.datetime(2016, 1, 1, 0, 0)
         mock_func.return_value = fake_api.get_fake_events()[1]
-        client = docker.from_env()
+        client = docker_from_env()
         assert client.events(since=since) == mock_func.return_value
         mock_func.assert_called_with(since=since)
 
     @mock.patch('docker.api.APIClient.info')
     def test_info(self, mock_func):
         mock_func.return_value = fake_api.get_fake_info()[1]
-        client = docker.from_env()
+        client = docker_from_env()
         assert client.info() == mock_func.return_value
         mock_func.assert_called_with()
 
     @mock.patch('docker.api.APIClient.ping')
     def test_ping(self, mock_func):
         mock_func.return_value = True
-        client = docker.from_env()
+        client = docker_from_env()
         assert client.ping() is True
         mock_func.assert_called_with()
 
     @mock.patch('docker.api.APIClient.version')
     def test_version(self, mock_func):
         mock_func.return_value = fake_api.get_fake_version()[1]
-        client = docker.from_env()
+        client = docker_from_env()
         assert client.version() == mock_func.return_value
         mock_func.assert_called_with()
 
     def test_call_api_client_method(self):
-        client = docker.from_env()
+        client = docker_from_env()
         with self.assertRaises(AttributeError) as cm:
             client.create_container()
         s = str(cm.exception)
@@ -64,7 +70,9 @@ class ClientTest(unittest.TestCase):
         assert "this method is now on the object APIClient" not in s
 
     def test_call_containers(self):
-        client = docker.DockerClient(**kwargs_from_env())
+        client = docker.DockerClient(
+            base_url='https://unittest:8080', **kwargs_from_env()
+        )
 
         with self.assertRaises(TypeError) as cm:
             client.containers()
@@ -101,11 +109,11 @@ class FromEnvTest(unittest.TestCase):
         self.assertEqual(client.api._version, '2.32')
 
     def test_from_env_without_version_uses_default(self):
-        client = docker.from_env()
+        client = docker_from_env()
 
         self.assertEqual(client.api._version, DEFAULT_DOCKER_API_VERSION)
 
     def test_from_env_without_timeout_uses_default(self):
-        client = docker.from_env()
+        client = docker_from_env()
 
         self.assertEqual(client.api.timeout, DEFAULT_TIMEOUT_SECONDS)

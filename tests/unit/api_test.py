@@ -104,7 +104,7 @@ class BaseAPIClientTest(unittest.TestCase):
             _read_from_socket=fake_read_from_socket
         )
         self.patcher.start()
-        self.client = APIClient()
+        self.client = APIClient(base_url='https://unittest:8080')
         # Force-clear authconfig to avoid tampering with the tests
         self.client._cfg = {'Configs': {}}
 
@@ -126,7 +126,7 @@ class BaseAPIClientTest(unittest.TestCase):
 class DockerApiTest(BaseAPIClientTest):
     def test_ctor(self):
         with pytest.raises(docker.errors.DockerException) as excinfo:
-            APIClient(version=1.12)
+            APIClient(base_url='https://unittest:8080', version=1.12)
 
         self.assertEqual(
             str(excinfo.value),
@@ -193,7 +193,7 @@ class DockerApiTest(BaseAPIClientTest):
         )
 
     def test_retrieve_server_version(self):
-        client = APIClient(version="auto")
+        client = APIClient(version="auto", base_url='https://unittest:8080')
         self.assertTrue(isinstance(client._version, six.string_types))
         self.assertFalse(client._version == "auto")
         client.close()
@@ -472,7 +472,7 @@ class UserAgentTest(unittest.TestCase):
         self.patcher.stop()
 
     def test_default_user_agent(self):
-        client = APIClient()
+        client = APIClient(base_url='https://unittest:8080')
         client.version()
 
         self.assertEqual(self.mock_send.call_count, 1)
@@ -481,7 +481,9 @@ class UserAgentTest(unittest.TestCase):
         self.assertEqual(headers['User-Agent'], expected)
 
     def test_custom_user_agent(self):
-        client = APIClient(user_agent='foo/bar')
+        client = APIClient(
+            base_url='https://unittest:8080', user_agent='foo/bar'
+        )
         client.version()
 
         self.assertEqual(self.mock_send.call_count, 1)
@@ -501,7 +503,7 @@ class DisableSocketTest(unittest.TestCase):
             return self.timeout
 
     def setUp(self):
-        self.client = APIClient()
+        self.client = APIClient(base_url='https://unittest:8080')
 
     def test_disable_socket_timeout(self):
         """Test that the timeout is disabled on a generic socket object."""

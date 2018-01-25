@@ -45,7 +45,7 @@ class DecoratorsTest(unittest.TestCase):
         def f(self, headers=None):
             return headers
 
-        client = APIClient()
+        client = APIClient(base_url='https://unittest:8080')
         client._auth_configs = {}
 
         g = update_headers(f)
